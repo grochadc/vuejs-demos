@@ -1,0 +1,51 @@
+ <!DOCTYPE html>
+ <html lang="en">
+
+<head>
+     <meta charset="UTF-8">
+     <title>Upvote Demo</title>
+     <script src="../lib/vue.min.js"></script>
+
+     <!--[if lt IE 9]>
+       <script src = "http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+     <![endif]-->
+ </head>
+
+ <body>
+   <div id="app">
+     <div v-for="item in entries">
+       <entry-item :body="item.body" :upvotes="item.upvotes" :downvotes="item.downvotes" @up-vote="upVote(item)" @down-vote="downVote(item)"></entry-item>
+     </div>
+   </div>
+
+   <script>
+   Vue.component('entry-item',{
+     props: ['body','upvotes','downvotes','id'],
+     template: `
+     <div class='entry'>
+      <span>{{ body }}</span>
+       <span><button v-on:click="$emit('up-vote')">Up</button></span>
+       <span>{{ upvotes - downvotes }}</span>
+       <span><button v-on:click="$emit('down-vote')">Down</button></span>
+     </div>
+     `
+   });
+
+   var app = new Vue({
+     el: '#app',
+     data: {
+       entries: [ { body:'Why am I not appearing?', upvotes: 0, downvotes: 0, id: 'a1' } ]
+     },
+     methods: {
+       upVote: function(entry){
+         entry.upvotes++
+       },
+       downVote: function(entry){
+         entry.downvotes ++
+       }
+     }
+   })
+   </script>
+ </body>
+
+ </html>
