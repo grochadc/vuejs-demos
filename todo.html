@@ -5,26 +5,45 @@
 </head>
 <body>
 <div id="app">
-  <ol>
-    <li v-for="todo in todos" :key="todo.id">
-      <span v-if="todo.completed">
-        <del>{{todo.text}}</del>
-      </span>
-      <span v-else>
-        {{todo.text}}
-      </span>
-      <span><input type="checkbox" v-model="todo.completed" v-on:change="checkboxChanged(todo)"/></span>
-    </li>
-  </ol>
-  <input v-model='tempTodo' /><button v-on:click="postTodo">Add todo</button>
+  <h3>TODO</h3>
+<ol>
+  <li v-for="todo in todos">
+    <todo-item v-bind:text="todo.text" v-bind:completed="todo.completed"></todo-item>
+  </li>
+</ol>
+<todo-form v-on:post-todo="postTodo"></todo-form>
+<button v-on:click="clearServer">Clear Server</button>
 </div>
 <script>
+  Vue.component('todo-item', {
+    props: ['text', 'completed'],
+    template: `
+    <div class="todo">
+      <span v-if="completed"><del>{{text}}</del></span>
+      <span v-else>{{text}}</span>
+      <span><input type="checkbox" v-model="completed" v-on:change="checkboxChanged(todo)" /></span>
+    </div>
+    `
+  });
+
+  Vue.component('todo-form',{
+    data: function(){
+      return {
+        tempTodo: ''
+      }
+    },
+    template: `
+    <div class="form">
+    <input v-model="tempTodo" /><button v-on:click="$emit('post-todo',tempTodo)">Add todo</button>
+    </div>
+    `
+  });
+
   var app = new Vue({
     el: '#app',
     data: {
       tempTodo: '',
-      todos: [
-      ]
+      todos: []
     },
     methods: {
       checkboxChanged: function(todo){
@@ -35,9 +54,9 @@
           body: todo.completed.toString()
         }).then((res) => console.log('The server responded with '+res.status));
       },
-      postTodo: function(){
+      postTodo: function(text){
         let ID = '_' + Math.random().toString(36).substr(2, 9);
-        let todoObj = {text: this.tempTodo, completed:false, id:ID, index: this.todos.length} //index==length because array starts at 0 and length-1 is the current one
+        let todoObj = {text, completed:false, id:ID, index: this.todos.length} //index==length because array starts at 0 and length-1 is the current one
         fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/'+todoObj.index,
         {
           headers: { 'Content-Type': 'application/json'},
@@ -48,7 +67,16 @@
           console.log(res.status);
           this.todos.push(todoObj);
           this.tempTodo = '';
-        })
+        }).catch(() => {
+          console.log("error");
+          this.todos.push(todoObj);
+          this.tempTodo = '';
+        });
+      },
+      clearServer: function(){
+        fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/', {
+          method: 'DELETE',
+        });
       }
     },
     created: function(){
@@ -56,10 +84,13 @@
       .then((res) => res.json())
         .then((data) => {
           let fetchedTodos = data.result;
+
           if(typeof fetchedTodos == 'string'){
             this.todos.push({text: fetchedTodos, completed: false});
             this.serverCount = 1;
-          } else{
+          }else if(fetchedTodos == null){
+              console.log('Server returned no items');
+          }else{
           fetchedTodos.forEach((item) => {
             this.todos.push(item)
           })
