@@ -6,14 +6,14 @@
 <body>
 <div id="app">
   <ol>
-    <li v-for="todo in todos">
+    <li v-for="todo in todos" :key="todo.id">
       <span v-if="todo.completed">
         <del>{{todo.text}}</del>
       </span>
       <span v-else>
         {{todo.text}}
       </span>
-      <span><input type="checkbox" v-model="todo.completed"/></span>
+      <span><input type="checkbox" v-model="todo.completed" v-on:change="checkboxChanged(todo)"/></span>
     </li>
   </ol>
   <input v-model='tempTodo' /><button v-on:click="postTodo">Add todo</button>
@@ -24,14 +24,21 @@
     data: {
       tempTodo: '',
       todos: [
-      ],
-      serverCount: 0
+      ]
     },
     methods: {
+      checkboxChanged: function(todo){
+        console.log("The changed obj's id was %s and the new completed property is %s. Index is %s",todo.id,todo.completed, todo.index);
+        fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/0/completed', {
+          method: 'PUT',
+          headers: { "Content-Type" : "application/json" },
+          body: todo.completed.toString()
+        }).then((res) => console.log('The server responded with '+res.status));
+      },
       postTodo: function(){
-        let todoObj = {text: this.tempTodo, completed:false}
-        currentTodo = this.todos.length;
-        fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/'+currentTodo,
+        let ID = '_' + Math.random().toString(36).substr(2, 9);
+        let todoObj = {text: this.tempTodo, completed:false, id:ID, index: this.todos.length} //index==length because array starts at 0 and length-1 is the current one
+        fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/'+todoObj.index,
         {
           headers: { 'Content-Type': 'application/json'},
           method: 'POST',
