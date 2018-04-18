@@ -1,0 +1,65 @@
+<html>
+<head>
+  <title>Vuejs TODO app</title>
+  <script src="vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <ol>
+    <li v-for="todo in todos">
+      <span v-if="todo.completed">
+        <del>{{todo.text}}</del>
+      </span>
+      <span v-else>
+        {{todo.text}}
+      </span>
+      <span><input type="checkbox" v-model="todo.completed"/></span>
+    </li>
+  </ol>
+  <input v-model='tempTodo' /><button v-on:click="postTodo">Add todo</button>
+</div>
+<script>
+  var app = new Vue({
+    el: '#app',
+    data: {
+      tempTodo: '',
+      todos: [
+      ],
+      serverCount: 0
+    },
+    methods: {
+      postTodo: function(){
+        let todoObj = {text: this.tempTodo, completed:false}
+        currentTodo = this.todos.length;
+        fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo/'+currentTodo,
+        {
+          headers: { 'Content-Type': 'application/json'},
+          method: 'POST',
+          body: JSON.stringify(todoObj)
+        })
+        .then((res) => {
+          console.log(res.status);
+          this.todos.push(todoObj);
+          this.tempTodo = '';
+        })
+      }
+    },
+    created: function(){
+      fetch('https://www.jsonstore.io/a753a792b362130eaaf89375d8d3cc80d66364fc359d8e0f8cc5f224688c3ef7/todo')
+      .then((res) => res.json())
+        .then((data) => {
+          let fetchedTodos = data.result;
+          if(typeof fetchedTodos == 'string'){
+            this.todos.push({text: fetchedTodos, completed: false});
+            this.serverCount = 1;
+          } else{
+          fetchedTodos.forEach((item) => {
+            this.todos.push(item)
+          })
+        }
+          })
+        }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<html>
+<head>
+  <title>Vuejs</title>
+  <script src="vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <input v-model="inputA"/>  +  <input v-model="inputB"/> = {{ parseInt(inputA) + parseInt(inputB) }}
+</div>
+<script>
+  var app = new Vue({
+    el: '#app',
+    data: {
+      inputA: 1,
+      inputB: 2
+      }
+    });
+</script>
+</body>
+</html>
